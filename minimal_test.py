@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
 # Configuração mais simples possível
 st.set_page_config(page_title="Teste Mínimo OpenAI")
@@ -16,21 +16,21 @@ if not api_key:
 
 # Testar apenas se tiver uma API key
 if api_key:
-    # Configurar a API key (versão antiga da biblioteca)
-    openai.api_key = api_key
+    # Inicialização do cliente (versão nova da API 1.x.x)
+    client = OpenAI(api_key=api_key)
     
     if st.button("Testar Conexão"):
         try:
             with st.spinner("Testando..."):
-                # Chamada mais básica possível (sintaxe da versão 0.28.1)
-                response = openai.ChatCompletion.create(
+                # Chamada usando a nova sintaxe da versão 1.x.x
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": "Responda apenas com a palavra 'Funcionou'"}],
                     max_tokens=5
                 )
                 
-                # Mostrar resultado
-                resultado = response['choices'][0]['message']['content']
+                # Acessar o resultado na nova estrutura
+                resultado = response.choices[0].message.content
                 st.success(f"Conexão estabelecida! Resposta: {resultado}")
         except Exception as e:
             st.error(f"Erro na conexão: {str(e)}")
