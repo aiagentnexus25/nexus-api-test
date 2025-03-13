@@ -1,6 +1,7 @@
 import streamlit as st
 import os
-from openai import OpenAI
+import requests
+import json
 
 # Desativar configurações de proxy que podem estar no ambiente
 os.environ.pop('http_proxy', None)
@@ -9,40 +10,49 @@ os.environ.pop('HTTP_PROXY', None)
 os.environ.pop('HTTPS_PROXY', None)
 os.environ.pop('OPENAI_PROXY', None)
 os.environ.pop('openai_proxy', None)
+os.environ['no_proxy'] = '*'
 
-st.title("Ultra Minimal OpenAI Test")
+st.title("Teste Direto API OpenAI")
+st.write("Esta versão usa requests diretamente, sem a biblioteca OpenAI")
 
 # API key do input manual apenas
 api_key = st.text_input("OpenAI API Key", type="password")
 
 if api_key and st.button("Testar"):
-    st.write("Tentando conectar com a API...")
+    st.write("Tentando conectar com a API via HTTP direto...")
     
     try:
-        # Redefinir todos os possíveis argumentos de proxy para None
-        # antes de criar o cliente
-        os.environ['no_proxy'] = '*'
+        # Usar requests diretamente para evitar problemas com a biblioteca OpenAI
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
         
-        # Cliente com configuração mínima
-        # Usando a classe diretamente para evitar qualquer inicialização padrão
-        client = OpenAI.__new__(OpenAI)
-        client.api_key = api_key
-        client.base_url = "https://api.openai.com/v1"
+        payload = {
+            "model": "gpt-3.5-turbo",
+            "messages": [{"role": "user", "content": "Olá, responda apenas com uma palavra."}],
+            "max_tokens": 5
+        }
         
-        # Teste mais simples possível
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": "Olá"}],
-            max_tokens=5
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            data=json.dumps(payload)
         )
         
-        st.success(f"Funcionou! Resposta: {response.choices[0].message.content}")
+        # Verificar se a resposta foi bem-sucedida
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            st.success(f"Funcionou! Resposta: {content}")
+            
+            # Mostrar detalhes do uso para confirmar
+            st.write("Detalhes de uso:")
+            st.write(f"Tokens de entrada: {result['usage']['prompt_tokens']}")
+            st.write(f"Tokens de saída: {result['usage']['completion_tokens']}")
+        else:
+            st.error(f"Erro da API: Status {response.status_code}")
+            st.write(response.text)
         
     except Exception as e:
         st.error(f"Erro: {type(e).__name__}: {str(e)}")
-        
-        # Mostrar todas as variáveis de ambiente relevantes para debug
-        proxy_vars = {k: v for k, v in os.environ.items() if 'proxy' in k.lower()}
-        if proxy_vars:
-            st.write("Variáveis de proxy encontradas:")
-            st.write(proxy_vars)
