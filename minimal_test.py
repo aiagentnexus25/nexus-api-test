@@ -32,11 +32,6 @@ if api_key:
                 # Mostrar resultado
                 resultado = response['choices'][0]['message']['content']
                 st.success(f"Conexão estabelecida! Resposta: {resultado}")
-                
-        except Exception as e:
-            st.error(f"Erro na conexão: {str(e)}")
-else:
-    st.info("Por favor, forneça uma API key para testar.")
         except Exception as e:
             st.error(f"Erro na conexão: {str(e)}")
 else:
