@@ -18,8 +18,16 @@ api_key = st.text_input("OpenAI API Key", type="password", help="Insira sua chav
 
 if api_key:
     try:
-        # Inicialização básica do cliente OpenAI
-        st.session_state.client = OpenAI(api_key=api_key)
+# Crie um cliente básico ignorando configurações de proxy padrão
+import os
+# Remover qualquer configuração de proxy em variáveis de ambiente
+if 'http_proxy' in os.environ:
+    del os.environ['http_proxy']
+if 'https_proxy' in os.environ:
+    del os.environ['https_proxy']
+
+# Inicializar o cliente com configuração mínima
+st.session_state.client = OpenAI(api_key=api_key)
         if not st.session_state.api_key_configured:
             st.session_state.api_key_configured = True
             st.success("API configurada com sucesso!")
